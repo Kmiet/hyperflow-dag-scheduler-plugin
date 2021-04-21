@@ -1,0 +1,11 @@
+{
+  "name": "@hyperflow/hyperflow-static-scheduler-plugin",
+  "version": "0.1.0",
+  "main": "plugin.js",
+  "repository": "https://github.com/Kmiet/hyperflow-dag-scheduler-plugin.git",
+  "author": "Kmiet <krzys.kmiecik@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
