@@ -1,7 +1,11 @@
 class Task {
-  constructor(taskId, nodeSelector, { predecessor = null, scheduleStartTime = null, scheduleEndTime = null }) {
+  constructor(taskId, nodeSelector, { cpuId = null, phaseId = null, predecessor, scheduleStartTime = null, scheduleEndTime = null }) {
     this.id = taskId;
     this.pred = predecessor;
+    
+    this.phaseId = phaseId;
+    this.cpuId = cpuId;
+
     this.nodeSelector = nodeSelector;
     this.hasCompleted = false;
     
@@ -17,12 +21,23 @@ class Task {
   }
 
   isReady() {
-    return this.pred ? this.pred.isCompleted() : true;
+    // console.log('DEBUG taskId', this.id, 'pred', this.pred)
+    if (this.pred) return this.pred.isCompleted();
+
+    return true;
+  }
+
+  getCpuId() {
+    return this.cpuId;
   }
 
   getNodeSelector() {
     this.startTime = Date.now();
     return this.nodeSelector;
+  }
+
+  getPredecessor() {
+    return this.pred;
   }
 
   setCompleted() {
