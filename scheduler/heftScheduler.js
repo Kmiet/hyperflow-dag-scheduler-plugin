@@ -13,6 +13,10 @@ class HeftScheduler {
     this.workdir = workdir;
     this.tasks = {};
 
+    const ipAddress = process.env.HF_VAR_SCHEDULER_SERVICE_HOST || "127.0.0.1";
+    this.schedulerHost = `http://${ipAddress}:5000`;
+    console.log("[StaticScheduler] IP Address:", this.schedulerHost);
+
       // Here additional configuration could be read needed to
       // compute the schedule, e.g.:
       // - list of nodes 
@@ -31,7 +35,7 @@ class HeftScheduler {
     const payload = dagToJson(createDag(this.wfJson), taskExecTimes, cpuMap.length);
 
     const instance = axios.create({
-      baseURL: 'http://127.0.0.1:5000',
+      baseURL: this.schedulerHost,
       timeout: 300 * 1000,
     });
 
