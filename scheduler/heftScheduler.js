@@ -30,7 +30,6 @@ class HeftScheduler {
     console.log("[StaticScheduler] Scheduling workflow, #tasks=" + numOfTasks);
 
     const cpuMap = readCpuMap(this.workdir);
-    console.log({ cpuMap })
     const taskExecTimes = readExecTimes(this.workdir);
     const payload = dagToJson(createDag(this.wfJson), taskExecTimes, cpuMap.length);
 
@@ -43,12 +42,14 @@ class HeftScheduler {
       const { data: { sched } } = response;
       return sched;
     });
-
+    
+    console.log('[StaticScheduler] Schedule with abstract root and end node: ', schedule);
+    
     Object.keys(schedule).forEach(cpuId => {
       let predecessor;
       
       schedule[cpuId].forEach(([taskId, scheduleStartTime, scheduleEndTime, _]) => {
-        if (taskId !== 0) { // filter abstract root node
+        if (taskId > 0 && taskId <= numOfTasks) { // filter abstract root and ending node
           this.tasks[taskId] = new Task(taskId, cpuMap[cpuId],  {
             scheduleStartTime,
             scheduleEndTime,

@@ -22,11 +22,15 @@ const createCpuMatrix = (cpuCount = CPU_COUNT) => {
 
 // DAG Matrix
 const createCommMatrix = (phases, nodes) => {
-  let commMatrix = Array.from({ length: nodes.length + 1 + 1 }, // + 1 starting node overhead
-    (_, i) => Array.from({ length: nodes.length + 1 + 1 }, // + 1 starting node overhead
+  let commMatrix = Array.from({ length: nodes.length + 1 + 1 + 1 }, // + 1 starting node overhead + 1 ending node overhead
+    (_, i) => Array.from({ length: nodes.length + 1 + 1 + 1 }, // + 1 starting node overhead + 1 ending node overhead
       __ => 0
     )
   );
+
+  let newLength = nodes.length + 1 + 1 + 1;
+  let phasesCount = phases.length;
+  let endNodes = new Array();
 
   phases.forEach(phase => {
     phase.forEach(taskId => {
@@ -35,6 +39,10 @@ const createCommMatrix = (phases, nodes) => {
         const oid = parseInt(outTaskId);
         commMatrix[tid+2][oid+2] = 1;
       });
+
+      if (nodes[taskId].nodesOut.length === 0) {
+        endNodes.push(taskId);
+      }
     });
   });
 
@@ -52,14 +60,25 @@ const createCommMatrix = (phases, nodes) => {
     commMatrix[1][tid+2] = 1;
   });
 
+  // append additional abstract final ending leaf task (ending node overhead)
+  console.log(endNodes.length, 'end')
+  endNodes.forEach(taskId => {
+    const tid = parseInt(taskId);
+    commMatrix[tid+2][newLength-1] = 1;
+  });
+  // phases[phasesCount-1].forEach(taskId => {
+  //   const tid = parseInt(taskId);
+  //   commMatrix[tid+2][newLength-1] = 1;
+  // });
+
   return commMatrix;
 };
 
 // Computation Matrix
 const createExecTimeMatrix = (times, cpuCount = CPU_COUNT) => {
-  let x = Array.from({ length: times.length + 1 + 1 }, // + 1 starting node overhead
+  let x = Array.from({ length: times.length + 1 + 1 + 1}, // +1 for border labels + 1 starting node overhead + 1 ending node overhead
     (_, i) => Array.from({ length: cpuCount + 1 }, 
-      __ => i < 2 ? times[i] : times[i-2]
+      __ => i < 2 ? times[i] : (i !== (times.length + 2) ? times[i-2] : times[i - 3])
     )
   );
 
@@ -67,6 +86,7 @@ const createExecTimeMatrix = (times, cpuCount = CPU_COUNT) => {
   x[0].forEach((_, i) =>{
     if(i !== 0) {
       x[0][i] = `P_${i-1}`;
+      x[1][i] = 0.0
     }
   });
 
@@ -75,6 +95,12 @@ const createExecTimeMatrix = (times, cpuCount = CPU_COUNT) => {
       row[0] = `T_${i-1}`
     }
   })
+
+  x[times.length + 2].forEach((_, i) => {
+    if (i !== 0) {
+      x[times.length + 2][i] = 0.0 
+    }
+  });
 
   return x;
 };
