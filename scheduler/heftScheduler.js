@@ -43,7 +43,7 @@ class HeftScheduler {
       return sched;
     });
     
-    console.log('[StaticScheduler] Schedule with abstract root and end node: ', schedule);
+    console.log('[StaticScheduler] Schedule with abstract root and end nodes: ', schedule);
     
     Object.keys(schedule).forEach(cpuId => {
       let predecessor;
@@ -85,7 +85,7 @@ class HeftScheduler {
    */
   async getTaskExecutionPermission(wfId, procId) {
     while (!this.tasks[procId].isReady()) {
-        console.log("Scheduler computing...");
+        // console.log("Scheduler computing...");
         await sleep(2000);
     }
 
@@ -103,6 +103,7 @@ class HeftScheduler {
    * @param procId - process identifier (integer 1..N)
    */
   notifyTaskCompletion(wfId, procId) {
+    console.log("[StaticScheduler] Completed task:", procId);
     this.tasks[procId].setCompleted()
   }
 }

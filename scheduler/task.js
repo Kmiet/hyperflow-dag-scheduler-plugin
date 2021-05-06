@@ -3,7 +3,7 @@ class Task {
     this.id = taskId;
     this.pred = predecessor;
     this.nodeSelector = nodeSelector;
-    this.isCompleted = false;
+    this.hasCompleted = false;
     
     this.actualStartTime = null;
     this.actualEndTime = null;
@@ -13,7 +13,7 @@ class Task {
   }
 
   isCompleted() {
-    return this.isCompleted;
+    return this.hasCompleted;
   }
 
   isReady() {
@@ -26,7 +26,7 @@ class Task {
   }
 
   setCompleted() {
-    this.isCompleted = true;
+    this.hasCompleted = true;
     this.endTime = Date.now();
   }
 };
