@@ -1,9 +1,9 @@
 const axios = require('axios');
 const Task = require('./task');
 const JobAgglomerator = require('./agglomeration');
-const { createDag, dagToJson, readCpuMap, readExecTimes, sleep } = require('../utils');
+const { createDag, dagToJson, readCpuMap, readExecTimes, sleep, saveExperimentData } = require('../utils');
 
-const SCHEDULER_TIMEOUT = 500;
+const SCHEDULER_TIMEOUT = 1000;
 
 class HeftScheduler {
 
@@ -13,7 +13,15 @@ class HeftScheduler {
     this.wflib = wflib;
     this.workdir = workdir;
     this.tasks = {};
+    
+    this.allTaskCount = 0;
+    this.finishedTaskCount = 0;
 
+    // Experiment data
+    this.workflowStartTime = null;
+    this.workflowEndTime = null;
+
+    // setup
     const ipAddress = process.env.HF_VAR_SCHEDULER_SERVICE_HOST || "127.0.0.1";
     this.schedulerHost = `http://${ipAddress}:5000`;
     console.log("[StaticScheduler] IP Address:", this.schedulerHost);
@@ -32,6 +40,7 @@ class HeftScheduler {
 
   async computeSchedule() {
     const numOfTasks = this.wfJson.processes.length;
+    this.allTaskCount = numOfTasks;
     console.log("[StaticScheduler] Scheduling workflow, #tasks=" + numOfTasks);
 
     const cpuMap = readCpuMap(this.workdir);
@@ -39,6 +48,7 @@ class HeftScheduler {
     const taskExecTimes = readExecTimes(this.workdir);
     const workflowDag = createDag(this.wfJson); 
     const payload = dagToJson(workflowDag, taskExecTimes, cpuMap.length);
+    // console.log(payload)
 
     const instance = axios.create({
       baseURL: this.schedulerHost,
@@ -56,10 +66,10 @@ class HeftScheduler {
     const taskToPhaseId = {};
     workflowDag.phases.forEach((phase, phaseId) => {
       phase.forEach(taskId => {
-        taskToPhaseId[taskId] = phaseId;
+        taskToPhaseId[taskId+1] = phaseId;
       });
     });
-    console.log({ schedule })
+    // console.log({ schedule })
     // Calculate schedule
     Object.keys(schedule).forEach(cpuId => {
       let predecessor;
@@ -90,6 +100,8 @@ class HeftScheduler {
     //   let task = this.tasks[taskId];
     //   console.log("Task: ", task.id, "Selector: ", task.getNodeSelector(), "Pred: ", task.pred ? task.pred.id : null)
     // })
+
+    this.workflowStartTime = Date.now();
 
     return;
   }
@@ -159,8 +171,14 @@ class HeftScheduler {
     const predecessor = this.tasks[procId].getPredecessor() || {};
     const predId = predecessor.id || -1;
 
-    while (!this.tasks[procId].isReady() && !this.taskAgglomerator.isTaskBuffered(predId)) {
-      // console.log("Scheduler computing...");
+    const canBuferTask = predecessor && this.tasks[procId].isSameOrEarlierPhase(predecessor) ? (
+      () => this.tasks[procId].isReady() || this.taskAgglomerator.isTaskBuffered(predId)
+    ) : (
+      () => this.tasks[procId].isReady()
+    );
+
+    while (!canBuferTask()) {
+      // console.log(procId, canBuferTask())
       await sleep(SCHEDULER_TIMEOUT);
     }
 
@@ -171,6 +189,7 @@ class HeftScheduler {
     }
 
     if (this.taskAgglomerator.isTaskAlreadySubmitted(procId)) {
+      this.tasks[procId].getNodeSelector();
       return taskFunctionCb([], "");
     }
 
@@ -194,6 +213,14 @@ class HeftScheduler {
   notifyTaskCompletion(wfId, procId) {
     console.log("[StaticScheduler] Completed task:", procId);
     this.tasks[procId].setCompleted()
+    this.finishedTaskCount++;
+    if (this.finishedTaskCount === this.allTaskCount) {
+      this.workflowEndTime = Date.now();
+      saveExperimentData(this.workdir, this.tasks, {
+        wfStartTime: this.workflowStartTime,
+        wfEndTime: this.workflowEndTime,
+      }, wfId);
+    }
   }
 }
 

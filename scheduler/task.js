@@ -27,12 +27,18 @@ class Task {
     return true;
   }
 
+  isSameOrEarlierPhase(otherTask) {
+    // base on some env var
+    // 2nd approach -> based off function name
+    return !(this.phaseId > otherTask.phaseId);
+  }
+
   getCpuId() {
     return this.cpuId;
   }
 
   getNodeSelector() {
-    this.startTime = Date.now();
+    this.actualStartTime = Date.now();
     return this.nodeSelector;
   }
 
@@ -42,7 +48,7 @@ class Task {
 
   setCompleted() {
     this.hasCompleted = true;
-    this.endTime = Date.now();
+    this.actualEndTime = Date.now();
   }
 };
 

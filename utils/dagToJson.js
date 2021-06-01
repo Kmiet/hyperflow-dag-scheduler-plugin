@@ -61,7 +61,7 @@ const createCommMatrix = (phases, nodes) => {
   });
 
   // append additional abstract final ending leaf task (ending node overhead)
-  console.log(endNodes.length, 'end')
+  // console.log(endNodes.length, 'end')
   endNodes.forEach(taskId => {
     const tid = parseInt(taskId);
     commMatrix[tid+2][newLength-1] = 1;
