@@ -86,6 +86,11 @@ class JobAgglomerator {
       return bufferContent;
     }
 
+    checkBufferFor(taskId) {
+      const cpuId = this.tasks[taskId].getCpuId();
+      const { ids: bufferedTaskIds } = this.taskBuffers[cpuId].getTasks();
+      return [bufferedTaskIds, cpuId];
+    }
 }
 
 module.exports = JobAgglomerator;

@@ -171,20 +171,33 @@ class HeftScheduler {
     const predecessor = this.tasks[procId].getPredecessor() || {};
     const predId = predecessor.id || -1;
 
+    // console.log("[StaticScheduler][AddTask][DEB-1]", procId, predId, predecessor && predecessor.hasCompleted);
+
     const canBuferTask = predecessor && this.tasks[procId].isSameOrEarlierPhase(predecessor) ? (
       () => this.tasks[procId].isReady() || this.taskAgglomerator.isTaskBuffered(predId)
     ) : (
       () => this.tasks[procId].isReady()
     );
 
+    // let igd = 0;
     while (!canBuferTask()) {
-      // console.log(procId, canBuferTask())
+      // igd++;
+      // if (igd == 20) {
+      //   // console.log("[StaticScheduler][AddItem][CanBuffer?]", "Proc:", procId, predecessor && this.tasks[procId].isSameOrEarlierPhase(predecessor), this.tasks[procId].isReady(), predecessor && this.taskAgglomerator.isTaskBuffered(predId), this.taskAgglomerator.checkBufferFor(procId))
+      //   igd = 0;
+      // }
       await sleep(SCHEDULER_TIMEOUT);
     }
 
     this.taskAgglomerator.addTask(taskItem);
 
+    // igd = 0;
     while (!this.taskAgglomerator.isTaskBufferReady(procId) && !this.taskAgglomerator.isTaskAlreadySubmitted(procId)) {
+      // igd++;
+      // if (igd == 20) {
+      //   // console.log("[StaticScheduler][AddItem][bufferReady?]", "Proc:", procId, this.taskAgglomerator.isTaskBufferReady(procId), this.taskAgglomerator.isTaskAlreadySubmitted(procId));
+      //   igd = 0;
+      // }
       await sleep(SCHEDULER_TIMEOUT);
     }
 
