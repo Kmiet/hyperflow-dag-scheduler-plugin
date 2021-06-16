@@ -116,6 +116,8 @@ class PeftScheduler {
    * @returns name of the node to run the task on
    */
   async getTaskExecutionPermission(wfId, procId) {
+    this.tasks[procId].setBeginWaitTime();
+
     while (!this.tasks[procId].isReady()) {
       // console.log("Scheduler computing...");
       await sleep(SCHEDULER_TIMEOUT);
@@ -162,6 +164,8 @@ class PeftScheduler {
     const wfId = taskItem.context.appId;
     const procId = taskItem.context.procId;
     const taskData = this.wfJson[procId-1];
+
+    this.tasks[procId].setBeginWaitTime();
 
     if (!this.jobAgglomerations) {
         this.jobAgglomerations = 

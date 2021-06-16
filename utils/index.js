@@ -10,7 +10,7 @@ const sleep = async (ms) => await new Promise(r => setTimeout(r, ms));
 const saveExperimentData = (workdir, tasks, { wfStartTime, wfEndTime }, wfId) => {
   const taskData = Object.keys(tasks).map(taskId => {
     const t = tasks[taskId];
-    return `${t.id} ${t.cpuId} ${t.scheduleStartTime} ${t.scheduleEndTime} ${t.actualStartTime} ${t.actualEndTime} ${wfStartTime} ${wfEndTime}`;
+    return `${t.id} ${t.cpuId} ${t.scheduleStartTime} ${t.scheduleEndTime} ${t.startWaitingTime} ${t.actualStartTime} ${t.actualEndTime} ${wfStartTime} ${wfEndTime}`;
   }).join(os.EOL);
   fs.writeFileSync(path.join(workdir, `scheduler_task_data_${wfId}.experiment`), taskData);
 };

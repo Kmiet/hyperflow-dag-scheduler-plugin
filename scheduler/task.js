@@ -12,6 +12,9 @@ class Task {
     this.actualStartTime = null;
     this.actualEndTime = null;
 
+    // Is waiting for allocation
+    this.startWaitingTime = null;
+
     this.scheduleStartTime = scheduleStartTime;
     this.scheduleEndTime = scheduleEndTime;
   }
@@ -38,7 +41,9 @@ class Task {
   }
 
   getNodeSelector() {
-    this.actualStartTime = Date.now();
+    if (!this.actualStartTime) {
+      this.actualStartTime = Date.now();
+    }
     return this.nodeSelector;
   }
 
@@ -49,6 +54,12 @@ class Task {
   setCompleted() {
     this.hasCompleted = true;
     this.actualEndTime = Date.now();
+  }
+
+  setBeginWaitTime() {
+    if (!this.startWaitingTime) {
+      this.startWaitingTime = Date.now();
+    }
   }
 };
 

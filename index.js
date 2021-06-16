@@ -8,19 +8,19 @@ class StaticSchedulerPlugin {
     // pass the workflow graph as part of this plugin's configuration
     
     constructor(name) {
-        this.name = name || 'HEFT';
+        this.name = name || process.env.HF_VAR_SCHEDULER_ALGORITHM;
         this.pgType = "scheduler";
     }
 
     async init(redisClient, wflib, engine, config) {
         const scheduler = StaticScheduler.build(this.name, { config, wflib, workdir: engine.config.workdir });
 
-        // try {
+        try {
             await scheduler.computeSchedule();
-        // } catch(e) {
-        //     console.error(`[StaticScheduler][FatalError] Could not compute schedule: ${e}`);
-        //     process.exit(1);
-        // }
+        } catch(e) {
+            console.error(`[StaticScheduler][FatalError] Could not compute schedule: ${e}`);
+            process.exit(1);
+        }
 
         // 'scheduler' will be available in workflow functions
         // as 'context.appConfig.scheduler'
