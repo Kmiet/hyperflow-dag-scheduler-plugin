@@ -19,6 +19,7 @@ class EmptyScheduler {
     this.workflowEndTime = null;
 
     // setup
+    this.agglomerationType = process.env.HF_VAR_SCHEDULER_AGGLOMERATION_TYPE || 'NONE'; // ['NONE', 'FUNC', 'PHASE-OPT']
     this.jobAgglomerations = {};
 
     // My approach
@@ -138,7 +139,7 @@ class EmptyScheduler {
       saveExperimentData(this.workdir, this.tasks, {
         wfStartTime: this.workflowStartTime,
         wfEndTime: this.workflowEndTime,
-      }, wfId);
+      }, wfId, "EMPTY", this.agglomerationType);
     }
   }
 }

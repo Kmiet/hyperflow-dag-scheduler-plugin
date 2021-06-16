@@ -3,7 +3,7 @@ const Task = require('./task');
 const JobAgglomerator = require('./agglomeration');
 const { createDag, dagToJson, readCpuMap, readExecTimes, sleep, saveExperimentData } = require('../utils');
 
-const SCHEDULER_TIMEOUT = 1000;
+const SCHEDULER_TIMEOUT = 500;
 
 class PeftScheduler {
 
@@ -24,7 +24,9 @@ class PeftScheduler {
     // setup
     const ipAddress = process.env.HF_VAR_SCHEDULER_SERVICE_HOST || "127.0.0.1";
     this.schedulerHost = `http://${ipAddress}:5000`;
-    console.log("[StaticScheduler] IP Address:", this.schedulerHost);
+    console.log("[PeftScheduler] IP Address:", this.schedulerHost);
+
+    this.agglomerationType = process.env.HF_VAR_SCHEDULER_AGGLOMERATION_TYPE || 'NONE'; // ['NONE', 'FUNC', 'PHASE-OPT']
     this.jobAgglomerations = {};
 
     // My approach
@@ -41,7 +43,7 @@ class PeftScheduler {
   async computeSchedule() {
     const numOfTasks = this.wfJson.processes.length;
     this.allTaskCount = numOfTasks;
-    console.log("[StaticScheduler] Scheduling workflow, #tasks=" + numOfTasks);
+    console.log("[PeftScheduler] Scheduling workflow, #tasks=" + numOfTasks);
 
     const cpuMap = readCpuMap(this.workdir);
     // console.log({ cpuMap })
@@ -60,7 +62,7 @@ class PeftScheduler {
       return sched;
     });
     
-    console.log('[StaticScheduler] Schedule with abstract root and end nodes: ', schedule);
+    console.log('[PeftScheduler] Schedule with abstract root and end nodes: ', schedule);
     
 
     const taskToPhaseId = {};
@@ -215,7 +217,7 @@ class PeftScheduler {
    * @param procId - process identifier (integer 1..N)
    */
   notifyTaskCompletion(wfId, procId) {
-    console.log("[StaticScheduler] Completed task:", procId);
+    console.log("[PeftScheduler] Completed task:", procId);
     this.tasks[procId].setCompleted()
     this.finishedTaskCount++;
     if (this.finishedTaskCount === this.allTaskCount) {
@@ -223,7 +225,7 @@ class PeftScheduler {
       saveExperimentData(this.workdir, this.tasks, {
         wfStartTime: this.workflowStartTime,
         wfEndTime: this.workflowEndTime,
-      }, wfId);
+      }, wfId, "PEFT", this.agglomerationType);
     }
   }
 }
