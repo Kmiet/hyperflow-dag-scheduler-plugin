@@ -3,6 +3,8 @@ class Task {
     this.id = taskId;
     this.pred = predecessor;
     
+    this.operationName = null;
+
     this.phaseId = phaseId;
     this.cpuId = cpuId;
 
@@ -31,9 +33,13 @@ class Task {
   }
 
   isSameOrEarlierPhase(otherTask) {
-    // base on some env var
-    // 2nd approach -> based off function name
     return !(this.phaseId > otherTask.phaseId);
+  }
+
+  isSameOperation(otherTask) {
+    // 2nd approach -> based off function name
+    // console.log("[CompareOpNames]", this.operationName, otherTask.operationName, this.operationName === otherTask.operationName);
+    return this.operationName === otherTask.operationName;
   }
 
   getCpuId() {
@@ -60,6 +66,10 @@ class Task {
     if (!this.startWaitingTime) {
       this.startWaitingTime = Date.now();
     }
+  }
+
+  setOperationName(name) {
+    this.operationName = name;
   }
 };
 

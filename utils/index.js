@@ -15,6 +15,10 @@ const saveExperimentData = (workdir, tasks, { wfStartTime, wfEndTime }, wfId, al
   fs.writeFileSync(path.join(workdir, `scheduler_task_data_${wfId}.experiment`), [`${algorithm} ${agglomerationType} ${wfStartTime} ${wfEndTime}`, taskData].join(os.EOL));
 };
 
+const saveScheduleToJson = (workdir, schedule, wfId, algorithm) => {
+  fs.writeFileSync(path.join(workdir, `scheduler_workflow_plan_${wfId}_${algorithm}.json`), JSON.stringify(schedule));
+};
+
 module.exports = {
   createDag,
   dagToJson,
@@ -22,4 +26,5 @@ module.exports = {
   readExecTimes,
   sleep,
   saveExperimentData,
+  saveScheduleToJson,
 };

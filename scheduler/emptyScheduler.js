@@ -43,9 +43,6 @@ class EmptyScheduler {
     taskData.forEach((t, idx) => {
       this.tasks[idx + 1] = new Task(idx + 1, "worker", {});
     });
-    // TODO: if( JOB_AGGLOMERATIONS provided in workflowJson ) read and call taskAgglomerator.initFromFile(...) ?
-    
-    this.taskAgglomerator.init(this.tasks, schedule);
 
     // DEBUG LOG
 

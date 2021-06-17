@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Task = require('./task');
 const JobAgglomerator = require('./agglomeration');
-const { createDag, dagToJson, readCpuMap, readExecTimes, sleep, saveExperimentData } = require('../utils');
+const { createDag, dagToJson, readCpuMap, readExecTimes, sleep, saveExperimentData, saveScheduleToJson } = require('../utils');
 
 const SCHEDULER_TIMEOUT = 500;
 
@@ -63,7 +63,8 @@ class PeftScheduler {
     });
     
     console.log('[PeftScheduler] Schedule with abstract root and end nodes: ', schedule);
-    
+    saveScheduleToJson(this.workdir, schedule, this.wfId, "PEFT");
+
 
     const taskToPhaseId = {};
     workflowDag.phases.forEach((phase, phaseId) => {
@@ -86,6 +87,7 @@ class PeftScheduler {
             phaseId: taskToPhaseId[taskId],
             predecessor,
           });
+          this.tasks[taskId].setOperationName(this.wfJson.processes[taskId-1].name);
 
           predecessor = this.tasks[taskId];
         }
@@ -165,8 +167,9 @@ class PeftScheduler {
   async addTaskItem(taskItem, taskFunctionCb) {
     const wfId = taskItem.context.appId;
     const procId = taskItem.context.procId;
-    const taskData = this.wfJson[procId-1];
+    const taskData = this.wfJson.processes[procId-1];
 
+    // this.tasks[procId].setOperationName(taskData.name);
     this.tasks[procId].setBeginWaitTime();
 
     if (!this.jobAgglomerations) {
@@ -177,7 +180,13 @@ class PeftScheduler {
     const predecessor = this.tasks[procId].getPredecessor() || {};
     const predId = predecessor.id || -1;
 
-    const canBuferTask = predecessor && this.tasks[procId].isSameOrEarlierPhase(predecessor) ? (
+    const predecessorCondition = this.agglomerationType === "PHASE-OPT" ? (
+      predecessor && this.tasks[procId].isSameOrEarlierPhase(predecessor)
+    ) : (
+      predecessor && this.tasks[procId].isSameOperation(predecessor)
+    );
+
+    const canBuferTask = predecessorCondition ? (
       () => this.tasks[procId].isReady() || this.taskAgglomerator.isTaskBuffered(predId)
     ) : (
       () => this.tasks[procId].isReady()
